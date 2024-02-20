@@ -95,9 +95,15 @@ for cluster in merged.obs['Clusters']:
 
 #M# driver genes :
 
+scv.tl.rank_velocity_genes(merged, groupby='Clusters', min_corr=.3)
+df = scv.get_df(merged, 'rank_velocity_genes/names')
+df.head()
 
+kwargs = dict(frameon=False, size=10, linewidth=1.5,add_outline=Clusters)
 
-
+scv.pl.scatter(merged, df["0_TNFRSF9+"][:5], ylabel='Ngn3 high EP', **kwargs)
+scv.pl.scatter(merged, df['Pre-endocrine'][:5], ylabel='Pre-endocrine', **kwargs)
+Clusters
 
 
 
