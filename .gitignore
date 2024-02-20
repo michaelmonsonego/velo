@@ -1,0 +1,15 @@
+20230807_Teva_memory_3_all_cells_files/
+20230807_Teva_memory_3_all_cells_cache/
+Genesets/
+*files/
+*cache/
+
+
+*.pdf
+*.csv
+*.png
+*.jpg
+*.RData
+*.rdx
+*.rdb
+*.html
