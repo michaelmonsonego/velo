@@ -67,6 +67,9 @@ scv.tl.recover_dynamics(merged, n_jobs = 8)
 scv.tl.velocity(merged, mode='dynamical')
 scv.tl.velocity_graph(merged)
 scv.pl.velocity_embedding_stream(merged, color='Clusters', basis="umap", dpi=300) #todo: why no titles on clusters?
+#M# trying to fix this
+scv.pl.velocity_embedding_stream(merged, color='Clusters', basis="umap", add_rug='Clusters', dpi=300)
+
 
 scv.tl.recover_latent_time(merged)
 scv.pl.scatter(merged, color='latent_time', color_map='gnuplot', size=80)
@@ -94,20 +97,16 @@ for cluster in merged.obs['Clusters']:
     scv.pl.scatter(merged, df[cluster][:5], ylabel=cluster, frameon=False)
 
 #M# driver genes :
-
 scv.tl.rank_velocity_genes(merged, groupby='Clusters', min_corr=.3)
 df = scv.get_df(merged, 'rank_velocity_genes/names')
 df.head()
+for cluster in merged.obs['Clusters'].unique().tolist():
+    scv.pl.scatter(merged, df[cluster][:5], ylabel=cluster, frameon=False) #M# why does this not work when i add : color='Clusters'?
 
-kwargs = dict(frameon=False, size=10, linewidth=1.5,add_outline=Clusters)
+# kwargs = dict(frameon=False, size=10, linewidth=1.5,add_outline=Clusters)
 
-scv.pl.scatter(merged, df["0_TNFRSF9+"][:5], ylabel='Ngn3 high EP', **kwargs)
-scv.pl.scatter(merged, df['Pre-endocrine'][:5], ylabel='Pre-endocrine', **kwargs)
-Clusters
-
-
-
-
+for cluster in merged.obs['Clusters'].unique().tolist():
+    scv.pl.scatter(merged, df[cluster][:5], ylabel=cluster, frameon=False, color='Clusters') #M# why does this not work when i add : color='Clusters'?
 
 
 
