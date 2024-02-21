@@ -10,6 +10,10 @@ import os
 # import hdf5plugin
 import warnings
 
+
+print("scanpy version:", sc.__version__)
+print("scvelo version:", scv.__version__)
+
 warnings.filterwarnings('ignore')
 os.chdir(r'D:\Michael\velo')
 
@@ -105,7 +109,6 @@ for cluster in merged.obs['Clusters'].unique().tolist():
 for cluster in merged.obs['Clusters'].unique().tolist():
     scv.pl.scatter(merged, df[cluster][:5], ylabel=cluster, frameon=False,
                    color='Clusters')  # M# why does this not work when i add : color='Clusters'?
-
 
 
 
