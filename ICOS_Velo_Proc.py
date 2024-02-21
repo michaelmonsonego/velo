@@ -62,8 +62,7 @@ ldata = anndata.concat([ldataC,ldataT])
 merged = scv.utils.merge(counts_sub, ldata)
 scv.pp.filter_and_normalize(merged, flavor='seurat')
 scv.pp.moments(merged, n_pcs=8, n_neighbors=30)
-
-scv.tl.recover_dynamics(merged, n_jobs = 8)
+scv.tl.recover_dynamics(merged, n_jobs = 8) # long time
 scv.tl.velocity(merged, mode='dynamical')
 scv.tl.velocity_graph(merged)
 scv.pl.velocity_embedding_stream(merged, color='Clusters', basis="umap", dpi=300) #todo: why no titles on clusters?
@@ -93,8 +92,6 @@ scv.pl.scatter(merged, basis=top_genes[:15], ncols=5, frameon=False) #M# todo : 
 scv.tl.rank_dynamical_genes(merged, groupby='Clusters') #todo: doesnt work, who do i need to convert to numpy ? (.to_numpy())
 df = scv.get_df(merged, 'rank_dynamical_genes/names')
 df.head(5)
-for cluster in merged.obs['Clusters']:
-    scv.pl.scatter(merged, df[cluster][:5], ylabel=cluster, frameon=False)
 
 #M# driver genes :
 scv.tl.rank_velocity_genes(merged, groupby='Clusters', min_corr=.3)
