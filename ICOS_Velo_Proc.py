@@ -70,11 +70,10 @@ scv.pp.moments(merged, n_pcs=8, n_neighbors=30)
 scv.tl.recover_dynamics(merged, n_jobs=8)  # long time
 scv.tl.velocity(merged, mode='dynamical')
 scv.tl.velocity_graph(merged)
-scv.pl.velocity_embedding_stream(merged, color='Clusters', basis="umap", dpi=300)  # todo: why no titles on clusters?
-
+scv.pl.velocity_embedding_stream(merged, color='Clusters', basis="umap", dpi=300)
 scv.tl.recover_latent_time(merged)
 scv.pl.scatter(merged, color='latent_time', color_map='gnuplot', size=80)
-merged.write('ICOS_velocity.h5ad', compression='gzip')
+# merged.write('ICOS_velocity.h5ad', compression='gzip')
 
 # M#
 
@@ -82,33 +81,38 @@ scv.pl.velocity_embedding(merged, color='Clusters', basis='umap', arrow_size=8, 
 scv.pl.velocity_embedding_grid(merged, color='Clusters', basis='umap', arrow_size=8, dpi=300)  # M# make arrows longer
 scv.pl.velocity(merged, var_names=['Ifngr1'], dpi=300)  # M#
 scv.pl.velocity(merged, var_names=['Ifngr1'], color='Clusters', dpi=300)  # M# same but with clusters color(why does this erase two other graphs?)
-scv.pl.velocity(merged, var_names=['Ifngr1'], color=['Clusters', 'latent_time'], dpi=300)  # M# todo: wht doesnt this work?
-scv.pl.velocity(merged, var_names=['Ifngr1'], dpi=300, add_outline=True)  # M# looks worse
+scv.pl.velocity(merged, var_names=['Ifngr1'], color='Clusters', dpi=300, add_outline=True)  # M# looks worse
 scv.pl.proportions(merged)
 # scv.pl.scatter(merged, 'Cpe', color=['Clusters', 'velocity'],
-scv.tl.paga(merged, groups='Clusters')
-scv.pl.paga(merged, basis='umap', size=50, alpha=.1, min_edge_width=2, node_size_scale=1.5)  # todo: why doesnt work
 
+#M# graph visualisation
+scv.tl.paga(merged, groups='Clusters')
+scv.pl.paga(merged, basis='umap', size=50, alpha=.1, min_edge_width=2, node_size_scale=1.5)
+
+
+# M# driver genes :
 top_genes = merged.var['fit_likelihood'].sort_values(ascending=False).index  # M# fixme : this works, just using fixme for fun
 scv.pl.scatter(merged, basis=top_genes[:15], color='Clusters', ncols=5, frameon=False)
 
-scv.tl.rank_dynamical_genes(merged, groupby='Clusters')  #todo: doesnt work, who do i need to convert to numpy ? (.to_numpy())
+scv.tl.rank_dynamical_genes(merged, groupby='Clusters')
 df = scv.get_df(merged, 'rank_dynamical_genes/names')
 df.head(5)
+try:
+    df.to_excel('dynamical_genes.xlsx')
+except Exception as e:
+    print("An error occurred:", e)
 
-# M# driver genes :
-scv.tl.rank_velocity_genes(merged, groupby='Clusters', min_corr=.3)
+for cluster in merged.obs['Clusters'].unique().tolist():
+    scv.pl.scatter(merged, df[cluster][:5], color='Clusters', ylabel=cluster, frameon=False)
+
+scv.tl.rank_velocity_genes(merged, groupby='Clusters', min_corr=.3) #M# todo: whats the difference between this and rank_dynamical_genes?
 df = scv.get_df(merged, 'rank_velocity_genes/names')
 df.head()
 for cluster in merged.obs['Clusters'].unique().tolist():
-    scv.pl.scatter(merged, df[cluster][:5], ylabel=cluster,
-                   frameon=False)  # M# why does this not work when i add : color='Clusters'?
-
-# kwargs = dict(frameon=False, size=10, linewidth=1.5,add_outline=Clusters)
+    scv.pl.scatter(merged, df[cluster][:5], ylabel=cluster, frameon=False)  # M# why does this not work when i add : color='Clusters'?
 
 for cluster in merged.obs['Clusters'].unique().tolist():
-    scv.pl.scatter(merged, df[cluster][:5], ylabel=cluster, frameon=False,
-                   color='Clusters')  # M# why does this not work when i add : color='Clusters'?
+    scv.pl.scatter(merged, df[cluster][:5], ylabel=cluster, frameon=False, color='Clusters')  # M# why does this not work when i add : color='Clusters'?
 
 
 
