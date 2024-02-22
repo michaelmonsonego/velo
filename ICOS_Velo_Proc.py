@@ -97,6 +97,7 @@ scv.pl.scatter(merged, basis=top_genes[:15], color='Clusters', ncols=5, frameon=
 scv.tl.rank_dynamical_genes(merged, groupby='Clusters')
 df = scv.get_df(merged, 'rank_dynamical_genes/names')
 df.head(5)
+#M# write dynamical genes to excel
 try:
     df.to_excel('dynamical_genes.xlsx')
 except Exception as e:
@@ -115,4 +116,15 @@ for cluster in merged.obs['Clusters'].unique().tolist():
     scv.pl.scatter(merged, df[cluster][:5], ylabel=cluster, frameon=False, color='Clusters')  # M# why does this not work when i add : color='Clusters'?
 
 
-
+#M# subsetting from specific genes to see how this afects the velocity umap
+genes_to_remove = ['Actb', 'Gm8369', 'Rtp4', 'Rgs1', 'Ifi206', 'Ptpn18', 'S100a6', 'Il2ra', 'Xaf1', 'Sdcbp2', 'Arl5a', 'Snx2']
+gene_mask = np.logical_not(np.isin(merged.var_names, genes_to_remove))
+sub_merged=merged[:, gene_mask]
+scv.pp.filter_and_normalize(sub_merged, flavor='seurat')
+scv.pp.moments(sub_merged, n_pcs=8, n_neighbors=30)
+scv.tl.recover_dynamics(sub_merged, n_jobs=8)  # long time
+scv.tl.velocity(sub_merged, mode='dynamical')
+scv.tl.velocity_graph(sub_merged)
+scv.pl.velocity_embedding_stream(sub_merged, color='Clusters', basis="umap", dpi=300)
+scv.tl.recover_latent_time(sub_merged)
+scv.pl.scatter(sub_merged, color='latent_time', color_map='gnuplot', size=80)
