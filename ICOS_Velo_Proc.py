@@ -79,9 +79,9 @@ scv.pl.scatter(merged, color='latent_time', color_map='gnuplot', size=80)
 
 scv.pl.velocity_embedding(merged, color='Clusters', basis='umap', arrow_size=8, dpi=300)  # M# arrow size wont change
 scv.pl.velocity_embedding_grid(merged, color='Clusters', basis='umap', arrow_size=8, dpi=300)  # M# make arrows longer
-scv.pl.velocity(merged, var_names=['Ifngr1'], dpi=300)  # M#
-scv.pl.velocity(merged, var_names=['Ifngr1'], color='Clusters', dpi=300)  # M# same but with clusters color(why does this erase two other graphs?)
-scv.pl.velocity(merged, var_names=['Ifngr1'], color='Clusters', dpi=300, add_outline=True)  # M# looks worse
+scv.pl.velocity(merged, ['Ifngr1'], dpi=300)
+scv.pl.velocity(merged, ['Ifngr1'], color='Clusters', dpi=300)  # M# same but with clusters color(why does this erase two other graphs?)
+scv.pl.velocity(merged, ['Ifngr1'], color='Clusters', dpi=300, add_outline=True)  # M# looks worse
 scv.pl.proportions(merged)
 # scv.pl.scatter(merged, 'Cpe', color=['Clusters', 'velocity'],
 
@@ -89,10 +89,11 @@ scv.pl.proportions(merged)
 scv.tl.paga(merged, groups='Clusters')
 scv.pl.paga(merged, basis='umap', size=50, alpha=.1, min_edge_width=2, node_size_scale=1.5)
 
-
 # M# driver genes :
 top_genes = merged.var['fit_likelihood'].sort_values(ascending=False).index  # M# fixme : this works, just using fixme for fun
 scv.pl.scatter(merged, basis=top_genes[:15], color='Clusters', ncols=5, frameon=False)
+scv.pl.scatter(adata, x='latent_time', y=var_names, frameon=False) # todo: try make work, from dynamical modeling scvelo
+
 
 scv.tl.rank_dynamical_genes(merged, groupby='Clusters')
 df = scv.get_df(merged, 'rank_dynamical_genes/names')
