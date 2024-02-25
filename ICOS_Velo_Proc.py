@@ -10,18 +10,14 @@ import os
 # import hdf5plugin
 import warnings
 
-
-print("scanpy version:", sc.__version__)
-print("scvelo version:", scv.__version__)
-
 warnings.filterwarnings('ignore')
 os.chdir(r'D:\Michael\velo')
 
 # Read in the clusters
-Clusters = pd.read_csv("clusters.csv", delimiter=',', index_col=0)
-Treatment = pd.read_csv("Treatment.csv", delimiter=',', index_col=0)
+Clusters = pd.read_csv("clusters.csv", delimiter=',', index_col=0) # which cluster every cell belongs to
+Treatment = pd.read_csv("Treatment.csv", delimiter=',', index_col=0) # defined control or treatment for every cell
 # Read UMAP exported R
-UMAP = pd.read_csv("cell_embeddings_umap.csv", delimiter=',', index_col=0)
+UMAP = pd.read_csv("cell_embeddings_umap.csv", delimiter=',', index_col=0) # the umap value for each cell
 
 # Read filtered feature bc matrix output from cellranger count
 counts_C = sc.read_10x_mtx(r"ICOS_shai\antiICOS_C1\filtered_feature_bc_matrix", var_names='gene_symbols', cache=True)
@@ -70,17 +66,21 @@ scv.pp.moments(merged, n_pcs=8, n_neighbors=30)
 scv.tl.recover_dynamics(merged, n_jobs=8)  # long time
 scv.tl.velocity(merged, mode='dynamical')
 scv.tl.velocity_graph(merged)
-scv.pl.velocity_embedding_stream(merged, color='Clusters', basis="umap", dpi=300)
+scv.pl.velocity_embedding_stream(merged, color='Clusters', basis="umap", dpi=300) #, save='velocity_embedding_stream.png'
+
+# scv.write(filename='merged.h5ad', adata=merged)
+# merged = sc.read(filename='merged.h5ad')
+
 scv.tl.recover_latent_time(merged)
 scv.pl.scatter(merged, color='latent_time', color_map='gnuplot', size=80)
-# merged.write('ICOS_velocity.h5ad', compression='gzip')
 
-# M#
-
+#M#
 scv.pl.velocity_embedding(merged, color='Clusters', basis='umap', arrow_size=8, dpi=300)  # M# arrow size wont change
 scv.pl.velocity_embedding_grid(merged, color='Clusters', basis='umap', arrow_size=8, dpi=300)  # M# make arrows longer
 scv.pl.velocity(merged, ['Ifngr1'], dpi=300)
 scv.pl.velocity(merged, ['Ifngr1'], color='Clusters', dpi=300)  # M# same but with clusters color(why does this erase two other graphs?)
+scv.pl.velocity(merged, ['Ifngr1'], color='Treatment', dpi=300)  # M# same but with clusters color(why does this erase two other graphs?)
+
 scv.pl.velocity(merged, ['Ifngr1'], color='Clusters', dpi=300, add_outline=True)  # M# looks worse
 scv.pl.proportions(merged)
 # scv.pl.scatter(merged, 'Cpe', color=['Clusters', 'velocity'],
@@ -92,7 +92,7 @@ scv.pl.paga(merged, basis='umap', size=50, alpha=.1, min_edge_width=2, node_size
 # M# driver genes :
 top_genes = merged.var['fit_likelihood'].sort_values(ascending=False).index  # M# fixme : this works, just using fixme for fun
 scv.pl.scatter(merged, basis=top_genes[:15], color='Clusters', ncols=5, frameon=False)
-scv.pl.scatter(adata, x='latent_time', y=var_names, frameon=False) # todo: try make work, from dynamical modeling scvelo
+scv.pl.scatter(merged, x='latent_time', y=var_names, frameon=False) # todo: try make work, from dynamical modeling scvelo
 
 
 scv.tl.rank_dynamical_genes(merged, groupby='Clusters')
@@ -126,6 +126,28 @@ scv.pp.moments(sub_merged, n_pcs=8, n_neighbors=30)
 scv.tl.recover_dynamics(sub_merged, n_jobs=8)  # long time
 scv.tl.velocity(sub_merged, mode='dynamical')
 scv.tl.velocity_graph(sub_merged)
-scv.pl.velocity_embedding_stream(sub_merged, color='Clusters', basis="umap", dpi=300)
+scv.pl.velocity_embedding_stream(sub_merged, color='Clusters', basis="umap", dpi=300, save='sub_no_Naive.png')
 scv.tl.recover_latent_time(sub_merged)
 scv.pl.scatter(sub_merged, color='latent_time', color_map='gnuplot', size=80)
+
+
+if __name__== '__main__' :
+    merged = sc.read(filename='merged.h5ad')
+    scv.tl.rank_velocity_genes(merged, groupby='Clusters', min_corr=.3) #M# todo: whats the difference between this and rank_dynamical_genes?
+    df = scv.get_df(merged, 'rank_velocity_genes/names')
+
+   #M# testing
+    scv.pl.velocity(merged, ['Ifngr1'], dpi=300)
+    scv.pl.velocity(merged, ['Ifngr1'], color='Clusters', dpi=300)  # M# same but with clusters color(why does this erase two other graphs?)
+    scv.pl.velocity(merged, ['Ifngr1'], color='Treatment', dpi=300)  # M# same but with clusters color(why does this erase two other graphs?)
+
+    for cluster in df.columns:
+        genes_to_remove = df.loc[:9, cluster]
+        gene_mask = np.logical_not(np.isin(merged.var_names, genes_to_remove))
+        sub_merged = merged[:, gene_mask]
+        scv.pp.filter_and_normalize(sub_merged, flavor='seurat')
+        scv.pp.moments(sub_merged, n_pcs=8, n_neighbors=30)
+        scv.tl.recover_dynamics(sub_merged, n_jobs=8)  # long time
+        scv.tl.velocity(sub_merged, mode='dynamical')
+        scv.tl.velocity_graph(sub_merged)
+        scv.pl.velocity_embedding_stream(sub_merged, color='Clusters', basis="umap", title=f'sub_no_{cluster}', dpi=300, save=f'sub_no_{cluster}.png')
