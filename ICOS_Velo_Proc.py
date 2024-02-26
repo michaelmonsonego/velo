@@ -142,8 +142,10 @@ if __name__== '__main__' :
     scv.tl.rank_velocity_genes(merged, groupby='Treatment', min_corr=.3)  # M# todo: whats the difference between this and rank_dynamical_genes?
     df_by_treatment = scv.get_df(merged, 'rank_velocity_genes/names')
     for cluster in df_by_treatment.columns:
+        counter=1
         for gene_to_show in df_by_treatment.loc[:4, cluster]:
-            scv.pl.velocity(merged, var_names=gene_to_show, color='Treatment', title=f'sub_{cluster}', dpi=300)  # , title=f'sub_{cluster}'
+            scv.pl.velocity(merged, var_names=gene_to_show, color='Treatment', dpi=300)  # , title=f'sub_{cluster}' # , save=f'dynamic_{cluster}_{counter}.png'
+            counter=counter+1
        # genes_to_show= df_by_treatment.loc[:4, cluster]
        # scv.pl.velocity(merged, var_names=genes_to_show, color='Treatment', dpi=300) # , title=f'sub_{cluster}'
 
