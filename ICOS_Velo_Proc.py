@@ -133,16 +133,24 @@ scv.pl.scatter(sub_merged, color='latent_time', color_map='gnuplot', size=80)
 
 if __name__== '__main__' :
     merged = sc.read(filename='merged.h5ad')
-    scv.tl.rank_velocity_genes(merged, groupby='Clusters', min_corr=.3) #M# todo: whats the difference between this and rank_dynamical_genes?
-    df = scv.get_df(merged, 'rank_velocity_genes/names')
 
    #M# testing
     scv.pl.velocity(merged, ['Ifngr1'], dpi=300)
     scv.pl.velocity(merged, ['Ifngr1'], color='Clusters', dpi=300)  # M# same but with clusters color(why does this erase two other graphs?)
     scv.pl.velocity(merged, ['Ifngr1'], color='Treatment', dpi=300)  # M# same but with clusters color(why does this erase two other graphs?)
+    #M# find most dynamic genes per treatment : genes whos velocities are interesting following treatment
+    scv.tl.rank_velocity_genes(merged, groupby='Treatment', min_corr=.3)  # M# todo: whats the difference between this and rank_dynamical_genes?
+    df_by_treatment = scv.get_df(merged, 'rank_velocity_genes/names')
+    for cluster in df_by_treatment.columns:
+        for gene_to_show in df_by_treatment.loc[:4, cluster]:
+            scv.pl.velocity(merged, var_names=gene_to_show, color='Treatment', title=f'sub_{cluster}', dpi=300)  # , title=f'sub_{cluster}'
+       # genes_to_show= df_by_treatment.loc[:4, cluster]
+       # scv.pl.velocity(merged, var_names=genes_to_show, color='Treatment', dpi=300) # , title=f'sub_{cluster}'
 
-    for cluster in df.columns:
-        genes_to_remove = df.loc[:9, cluster]
+    scv.tl.rank_velocity_genes(merged, groupby='Clusters', min_corr=.3)  # M# todo: whats the difference between this and rank_dynamical_genes?
+    df_by_clusters = scv.get_df(merged, 'rank_velocity_genes/names')
+    for cluster in df_by_clusters.columns:
+        genes_to_remove = df_by_clusters.loc[:9, cluster]
         gene_mask = np.logical_not(np.isin(merged.var_names, genes_to_remove))
         sub_merged = merged[:, gene_mask]
         scv.pp.filter_and_normalize(sub_merged, flavor='seurat')
