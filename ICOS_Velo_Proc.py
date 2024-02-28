@@ -141,6 +141,7 @@ if __name__== '__main__' :
     #M# find most dynamic genes per treatment : genes whos velocities are interesting following treatment
     scv.tl.rank_velocity_genes(merged, groupby='Treatment', min_corr=.3)  # M# todo: whats the difference between this and rank_dynamical_genes?
     df_by_treatment = scv.get_df(merged, 'rank_velocity_genes/names')
+    df_by_treatment.to_excel('dynamical_genes_by_treatment.xlsx')
     for cluster in df_by_treatment.columns:
         counter=1
         for gene_to_show in df_by_treatment.loc[:4, cluster]:
