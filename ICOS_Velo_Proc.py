@@ -130,6 +130,47 @@ scv.pl.velocity_embedding_stream(sub_merged, color='Clusters', basis="umap", dpi
 scv.tl.recover_latent_time(sub_merged)
 scv.pl.scatter(sub_merged, color='latent_time', color_map='gnuplot', size=80)
 
+#todo : make inedxes right after subsetting. getting weird warnings
+#M# splitting to 2 objects by treatment
+control_merged = merged[merged.obs['Treatment']=='Control'].copy()
+treat_merged = merged[merged.obs['Treatment']=='Treatment'].copy()
+#M# check
+control_merged.obs['Clusters']
+control_merged.obsm["X_umap"]
+control_merged.obs.index
+
+#M# Control analysis
+scv.pp.filter_and_normalize(control_merged, flavor='seurat')
+scv.pp.neighbors(control_merged)
+scv.pp.moments(control_merged, n_pcs=8, n_neighbors=30)
+scv.tl.recover_dynamics(control_merged, n_jobs=8)  # long time
+scv.tl.velocity(control_merged, mode='dynamical')
+scv.tl.velocity_graph(control_merged)
+scv.pl.velocity_embedding_stream(control_merged, color='Clusters', basis="umap", dpi=300) # , save='.png'
+#scv.write(filename='control_merged.h5ad', adata=control_merged)
+
+#M# Treatment analysis
+treat_merged.obs['Clusters']
+scv.pp.filter_and_normalize(treat_merged, flavor='seurat')
+scv.pp.moments(treat_merged, n_pcs=8, n_neighbors=30)
+scv.tl.recover_dynamics(treat_merged, n_jobs=8)  # long time
+scv.tl.velocity(treat_merged, mode='dynamical')
+scv.tl.velocity_graph(treat_merged)
+scv.pl.velocity_embedding_stream(treat_merged, color='Clusters', basis="umap", dpi=300) # , save='.png'
+#scv.write(filename='treat_merged.h5ad', adata=treat_merged)
+
+
+scv.tl.paga(treat_merged, groups='Clusters')
+scv.pl.paga(treat_merged, basis='umap', size=50, alpha=.1, min_edge_width=2, node_size_scale=1.5)
+
+#M# trying functions from scv tutorial
+#M# testing for differential kinetics:
+merged.obs['clusters'] = merged.obs['Clusters']
+scv.tl.differential_kinetic_test(merged)  # , groupby=None #
+
+
+
+
 
 if __name__== '__main__' :
     merged = sc.read(filename='merged.h5ad')
