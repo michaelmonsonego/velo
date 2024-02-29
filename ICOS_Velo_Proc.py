@@ -192,6 +192,27 @@ scv.pl.heatmap(merged, ['Ifngr1', 'Pycard', 'Mrpl20', 'Ly6e'])
 
 
 
+#M# removing 100 most dynamic genes from naive like cluster to see influence on velocity stream umap
+scv.tl.rank_velocity_genes(merged, groupby='Clusters', min_corr=.3)  # M# todo: whats the difference between this and rank_dynamical_genes?
+df_by_clusters = scv.get_df(merged, 'rank_velocity_genes/names')
+genes_to_remove = df_by_clusters.loc[:99, '3_Naive_like']
+gene_mask = np.logical_not(np.isin(merged.var_names, genes_to_remove))
+sub_merged_no_naive = merged[:, gene_mask]
+scv.pp.filter_and_normalize(sub_merged_no_naive, flavor='seurat')
+scv.pp.moments(sub_merged_no_naive, n_pcs=8, n_neighbors=30)
+scv.tl.recover_dynamics(sub_merged_no_naive, n_jobs=8)  # long time
+scv.tl.velocity(sub_merged_no_naive, mode='dynamical')
+scv.tl.velocity_graph(sub_merged_no_naive)
+scv.pl.velocity_embedding_stream(sub_merged_no_naive, color='Clusters', basis="umap", title=f'sub_no_naive', dpi=300, save='sub_no_naive.png')
+scv.tl.paga(sub_merged_no_naive, groups='Clusters')
+scv.pl.paga(sub_merged_no_naive, basis='umap', size=50, alpha=.1, min_edge_width=2, node_size_scale=1.5)
+
+#M# code above only calculates new velocity for same umap. doesnt look great
+        
+        
+        
+
+
 
 
 if __name__== '__main__' :
@@ -225,3 +246,11 @@ if __name__== '__main__' :
         scv.tl.velocity(sub_merged, mode='dynamical')
         scv.tl.velocity_graph(sub_merged)
         scv.pl.velocity_embedding_stream(sub_merged, color='Clusters', basis="umap", title=f'sub_no_{cluster}', dpi=300, save=f'sub_no_{cluster}.png')
+        
+        
+        
+        
+        
+        
+        
+        
