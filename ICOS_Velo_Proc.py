@@ -167,6 +167,28 @@ scv.pl.paga(treat_merged, basis='umap', size=50, alpha=.1, min_edge_width=2, nod
 #M# testing for differential kinetics:
 merged.obs['clusters'] = merged.obs['Clusters']
 scv.tl.differential_kinetic_test(merged)  # , groupby=None #
+differential_kin_df = scv.get_df(merged, ['fit_diff_kinetics', 'fit_pval_kinetics'], precision=2)
+differential_kin_df.head(10)
+scv.pl.scatter(merged, basis=['Nop58', 'Tuba4a', 'Sp110', 'Sp100'], add_outline='fit_diff_kinetics', save='differential_kinetecs_1.png')
+scv.pl.scatter(merged, basis=['Bcl2', 'Rgs2', 'Cacna1e', 'Tor3a'], add_outline='fit_diff_kinetics',legend_loc='best', save='differential_kinetecs_2.png') #M# todo : ,legend_loc='right' make work nice
+#M# recompute velocities considering new knowledge about differential kinetics!
+top_genes = merged.var['fit_likelihood'].sort_values(ascending=False).index[:100]
+scv.tl.differential_kinetic_test(merged, var_names=top_genes, groupby='clusters')
+scv.pl.scatter(merged, basis=top_genes[:15], ncols=5, add_outline='fit_diff_kinetics')
+scv.pl.scatter(merged, basis=top_genes[15:30], ncols=5, add_outline='fit_diff_kinetics')
+scv.tl.velocity(merged, diff_kinetics=True)
+scv.tl.velocity_graph(merged)
+scv.pl.velocity_embedding(merged, dpi=120, arrow_size=2, arrow_length=2)
+scv.pl.velocity_embedding_stream(merged, color='Clusters', basis="umap", dpi=300, save='recomputed_velocities_stream.png') # , save='.png'
+
+scv.tl.paga(merged, groups='Clusters')
+scv.pl.paga(merged, basis='umap', size=50, alpha=.1, min_edge_width=2, node_size_scale=1.5)
+scv.tl.recover_latent_time(merged)
+scv.pl.scatter(merged, color='latent_time', color_map='gnuplot', size=80)
+
+scv.pl.heatmap(merged, ['Ifngr1', 'Pycard', 'Mrpl20', 'Ly6e'])
+
+
 
 
 
