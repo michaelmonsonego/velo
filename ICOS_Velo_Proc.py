@@ -208,9 +208,11 @@ scv.tl.paga(sub_merged_no_naive, groups='Clusters')
 scv.pl.paga(sub_merged_no_naive, basis='umap', size=50, alpha=.1, min_edge_width=2, node_size_scale=1.5)
 
 #M# code above only calculates new velocity for same umap. doesnt look great
-        
-        
-        
+
+#M# trying to calculate velocity umap stream embedding based on most dynamic genes between treatments
+#M# OR trying to calculate velocity based on genes i choose (most dynamic between treatments)
+scv.tl.recover_dynamics(merged, var_names='all') #M# maybe edit var_names = [ , , , , , ] or var_names = {list of interesting genes} (same thing)
+#M# came from here : https://github.com/theislab/scvelo/issues/200
 
 
 
