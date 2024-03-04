@@ -69,7 +69,7 @@ scv.tl.velocity_graph(merged)
 scv.pl.velocity_embedding_stream(merged, color='Clusters', basis="umap", dpi=300) #, save='velocity_embedding_stream.png'
 
 # scv.write(filename='merged.h5ad', adata=merged)
-# merged = sc.read(filename='merged.h5ad')
+merged = sc.read(filename='merged.h5ad')
 
 scv.tl.recover_latent_time(merged)
 scv.pl.scatter(merged, color='latent_time', color_map='gnuplot', size=80)
@@ -87,11 +87,13 @@ scv.pl.proportions(merged)
 
 #M# graph visualisation
 scv.tl.paga(merged, groups='Clusters')
-scv.pl.paga(merged, basis='umap', size=50, alpha=.1, min_edge_width=2, node_size_scale=1.5)
+scv.pl.paga(merged, basis='umap', size=50, alpha=.1, min_edge_width=2, node_size_scale=1.5) # , save='paga_velocity_embedding_stream.png'
+
+
 
 # M# driver genes :
 top_genes = merged.var['fit_likelihood'].sort_values(ascending=False).index  # M# fixme : this works, just using fixme for fun
-scv.pl.scatter(merged, basis=top_genes[:15], color='Clusters', ncols=5, frameon=False)
+scv.pl.scatter(merged, basis=top_genes[:15], color='Clusters', ncols=5, frameon=False, save='driver_genes_scatter.png')
 scv.pl.scatter(merged, x='latent_time', y=var_names, frameon=False) # todo: try make work, from dynamical modeling scvelo
 
 
@@ -105,7 +107,7 @@ except Exception as e:
     print("An error occurred:", e)
 
 for cluster in merged.obs['Clusters'].unique().tolist():
-    scv.pl.scatter(merged, df[cluster][:5], color='Clusters', ylabel=cluster, frameon=False)
+    scv.pl.scatter(merged, df[cluster][:5], color='Clusters', ylabel=cluster, frameon=False) # , save=f'dynamical_for_{cluster}.png'
 
 scv.tl.rank_velocity_genes(merged, groupby='Clusters', min_corr=.3) #M# todo: whats the difference between this and rank_dynamical_genes?
 df = scv.get_df(merged, 'rank_velocity_genes/names')
@@ -115,7 +117,7 @@ for cluster in merged.obs['Clusters'].unique().tolist():
 
 for cluster in merged.obs['Clusters'].unique().tolist():
     scv.pl.scatter(merged, df[cluster][:5], ylabel=cluster, frameon=False, color='Clusters')  # M# why does this not work when i add : color='Clusters'?
-
+#M# todo : rank_velocity_genes() and rank_dynamical_genes() does same thing? understand difference
 
 #M# subsetting from specific genes to see how this afects the velocity umap
 genes_to_remove = ['Actb', 'Gm8369', 'Rtp4', 'Rgs1', 'Ifi206', 'Ptpn18', 'S100a6', 'Il2ra', 'Xaf1', 'Sdcbp2', 'Arl5a', 'Snx2']
@@ -146,7 +148,7 @@ scv.pp.moments(control_merged, n_pcs=8, n_neighbors=30)
 scv.tl.recover_dynamics(control_merged, n_jobs=8)  # long time
 scv.tl.velocity(control_merged, mode='dynamical')
 scv.tl.velocity_graph(control_merged)
-scv.pl.velocity_embedding_stream(control_merged, color='Clusters', basis="umap", dpi=300) # , save='.png'
+scv.pl.velocity_embedding_stream(control_merged, color='Clusters', basis="umap", dpi=300, save='control_obj.png') # , save='.png'
 #scv.write(filename='control_merged.h5ad', adata=control_merged)
 
 #M# Treatment analysis
@@ -156,7 +158,7 @@ scv.pp.moments(treat_merged, n_pcs=8, n_neighbors=30)
 scv.tl.recover_dynamics(treat_merged, n_jobs=8)  # long time
 scv.tl.velocity(treat_merged, mode='dynamical')
 scv.tl.velocity_graph(treat_merged)
-scv.pl.velocity_embedding_stream(treat_merged, color='Clusters', basis="umap", dpi=300) # , save='.png'
+scv.pl.velocity_embedding_stream(treat_merged, color='Clusters', basis="umap", dpi=300, save='treatment_obj.png') # , save='.png'
 #scv.write(filename='treat_merged.h5ad', adata=treat_merged)
 
 
@@ -169,8 +171,8 @@ merged.obs['clusters'] = merged.obs['Clusters']
 scv.tl.differential_kinetic_test(merged)  # , groupby=None #
 differential_kin_df = scv.get_df(merged, ['fit_diff_kinetics', 'fit_pval_kinetics'], precision=2)
 differential_kin_df.head(10)
-scv.pl.scatter(merged, basis=['Nop58', 'Tuba4a', 'Sp110', 'Sp100'], add_outline='fit_diff_kinetics', save='differential_kinetecs_1.png')
-scv.pl.scatter(merged, basis=['Bcl2', 'Rgs2', 'Cacna1e', 'Tor3a'], add_outline='fit_diff_kinetics',legend_loc='best', save='differential_kinetecs_2.png') #M# todo : ,legend_loc='right' make work nice
+scv.pl.scatter(merged, basis=['Nop58', 'Tuba4a', 'Sp110', 'Sp100'], add_outline='fit_diff_kinetics')# , save='differential_kinetecs_1.png'
+scv.pl.scatter(merged, basis=['Bcl2', 'Rgs2', 'Cacna1e', 'Tor3a'], add_outline='fit_diff_kinetics',legend_loc='best') #M# , save='differential_kinetecs_2.png'
 #M# recompute velocities considering new knowledge about differential kinetics!
 top_genes = merged.var['fit_likelihood'].sort_values(ascending=False).index[:100]
 scv.tl.differential_kinetic_test(merged, var_names=top_genes, groupby='clusters')
@@ -203,9 +205,9 @@ scv.pp.moments(sub_merged_no_naive, n_pcs=8, n_neighbors=30)
 scv.tl.recover_dynamics(sub_merged_no_naive, n_jobs=8)  # long time
 scv.tl.velocity(sub_merged_no_naive, mode='dynamical')
 scv.tl.velocity_graph(sub_merged_no_naive)
-scv.pl.velocity_embedding_stream(sub_merged_no_naive, color='Clusters', basis="umap", title=f'sub_no_naive', dpi=300, save='sub_no_naive.png')
+scv.pl.velocity_embedding_stream(sub_merged_no_naive, color='Clusters', basis="umap", title=f'sub_no_naive', dpi=300)# , save='sub_no_naive.png'
 scv.tl.paga(sub_merged_no_naive, groups='Clusters')
-scv.pl.paga(sub_merged_no_naive, basis='umap', size=50, alpha=.1, min_edge_width=2, node_size_scale=1.5)
+scv.pl.paga(sub_merged_no_naive, basis='umap', size=50, alpha=.1, min_edge_width=2, node_size_scale=1.5)#, save='paga_sub_no_naive.png'
 
 #M# code above only calculates new velocity for same umap. doesnt look great
 
