@@ -219,6 +219,29 @@ scv.tl.recover_dynamics(merged, var_names='all') #M# maybe edit var_names = [ , 
 
 
 
+trying = merged.var[merged.var['velocity_genes']==True]
+#M# understanding number of velocity genes
+print(merged.var['velocity_genes'].sum(), adata.n_vars)
+#M# phase plots of top likelyhood genes
+top_genes = merged.var_names[merged.var.fit_likelihood.argsort()[::-1]]
+scv.pl.scatter(merged, basis=top_genes[:10], ncols=5)
+
+#M# adjusting threshold for velocity genes
+scv.tl.velocity(merged, mode='dynamical', min_r2=1e-3, min_likelihood=0.001)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 if __name__== '__main__' :
     merged = sc.read(filename='merged.h5ad')
 
