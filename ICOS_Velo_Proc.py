@@ -112,6 +112,7 @@ for cluster in merged.obs['Clusters'].unique().tolist():
 scv.tl.rank_velocity_genes(merged, groupby='Clusters', min_corr=.3) #M# todo: whats the difference between this and rank_dynamical_genes?
 df = scv.get_df(merged, 'rank_velocity_genes/names')
 df.head()
+df.to_excel('velocity_genes.xlsx')
 for cluster in merged.obs['Clusters'].unique().tolist():
     scv.pl.scatter(merged, df[cluster][:5], ylabel=cluster, frameon=False)  # M# why does this not work when i add : color='Clusters'?
 
