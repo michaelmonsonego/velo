@@ -222,13 +222,20 @@ scv.tl.recover_dynamics(merged, var_names='all') #M# maybe edit var_names = [ , 
 
 trying = merged.var[merged.var['velocity_genes']==True]
 #M# understanding number of velocity genes
-print(merged.var['velocity_genes'].sum(), adata.n_vars)
+print(merged.var['velocity_genes'].sum(), merged.n_vars) #M# 917 velocity contributing genes
 #M# phase plots of top likelyhood genes
 top_genes = merged.var_names[merged.var.fit_likelihood.argsort()[::-1]]
 scv.pl.scatter(merged, basis=top_genes[:10], ncols=5)
 
 #M# adjusting threshold for velocity genes
-scv.tl.velocity(merged, mode='dynamical', min_r2=1e-3, min_likelihood=0.001)
+modify_velo_params = merged
+scv.tl.velocity(modify_velo_params, mode='dynamical', min_r2=1e-5, min_likelihood=0.00001) # original : min_r2=1e-3, min_likelihood=0.001
+scv.tl.velocity_graph(modify_velo_params)
+scv.pl.velocity_embedding_stream(modify_velo_params, color='Clusters', basis="umap", title=f'sub_no_naive', dpi=300)# , save='sub_no_naive.png'
+print(modify_velo_params.var['velocity_genes'].sum(), modify_velo_params.n_vars) #M# 990 velocity contributing genes
+
+scv.tl.paga(modify_velo_params, groups='Clusters')
+scv.pl.paga(modify_velo_params, basis='umap', size=50, alpha=.1, min_edge_width=2, node_size_scale=1.5)#, save='paga_sub_no_naive.png'
 
 
 
