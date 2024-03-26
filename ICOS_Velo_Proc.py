@@ -61,6 +61,7 @@ ldata = anndata.concat([ldataC, ldataT])
 
 # Merge velocyto and cellranger outputs
 merged = scv.utils.merge(counts_sub, ldata)
+
 scv.pp.filter_and_normalize(merged, flavor='seurat')
 scv.pp.moments(merged, n_pcs=8, n_neighbors=30)
 scv.tl.recover_dynamics(merged, n_jobs=8)  # long time
@@ -68,7 +69,7 @@ scv.tl.velocity(merged, mode='dynamical')
 scv.tl.velocity_graph(merged)
 scv.pl.velocity_embedding_stream(merged, color='Clusters', basis="umap", dpi=300) #, save='velocity_embedding_stream.png'
 
-# scv.write(filename='merged.h5ad', adata=merged)
+# sc.write(filename='merged.h5ad', adata=merged)
 merged = sc.read(filename='merged.h5ad')
 
 scv.tl.recover_latent_time(merged)
@@ -78,8 +79,10 @@ scv.pl.scatter(merged, color='latent_time', color_map='gnuplot', size=80)
 scv.pl.velocity_embedding(merged, color='Clusters', basis='umap', arrow_size=8, dpi=300)  # M# arrow size wont change
 scv.pl.velocity_embedding_grid(merged, color='Clusters', basis='umap', arrow_size=8, dpi=300)  # M# make arrows longer
 scv.pl.velocity(merged, ['Ifngr1'], dpi=300)
-scv.pl.velocity(merged, ['Ifngr1'], color='Clusters', dpi=300)  # M# same but with clusters color(why does this erase two other graphs?)
-scv.pl.velocity(merged, ['Ifngr1'], color='Treatment', dpi=300)  # M# same but with clusters color(why does this erase two other graphs?)
+scv.pl.velocity(merged, ['Ifngr1'], color='Clusters', dpi=300, save='Ifngr_clusters.png')  # M# same but with clusters color(why does this erase two other graphs?)
+scv.pl.velocity(merged, ['Ifngr1'], color='Treatment', dpi=300, save='Ifngr_treatment.png')  # M# same but with clusters color(why does this erase two other graphs?)
+scv.pl.scatter(merged, ['Ifngr1'], color='Clusters', dpi=300, legend_loc='best') # , save='Ifngr_clusters.png'
+scv.pl.scatter(merged, ['Ifngr1'], color='Treatment', dpi=300, legend_loc='best')# , save='Ifngr_treatment.png'
 
 scv.pl.velocity(merged, ['Ifngr1'], color='Clusters', dpi=300, add_outline=True)  # M# looks worse
 scv.pl.proportions(merged)
@@ -93,31 +96,28 @@ scv.pl.paga(merged, basis='umap', size=50, alpha=.1, min_edge_width=2, node_size
 
 # M# driver genes :
 top_genes = merged.var['fit_likelihood'].sort_values(ascending=False).index  # M# fixme : this works, just using fixme for fun
-scv.pl.scatter(merged, basis=top_genes[:15], color='Clusters', ncols=5, frameon=False, save='driver_genes_scatter.png')
+scv.pl.scatter(merged, basis=top_genes[:15], color='Clusters', ncols=5, frameon=False) # , save='driver_genes_scatter.png'
 scv.pl.scatter(merged, x='latent_time', y=var_names, frameon=False) # todo: try make work, from dynamical modeling scvelo
 
 
 scv.tl.rank_dynamical_genes(merged, groupby='Clusters')
-df = scv.get_df(merged, 'rank_dynamical_genes/names')
-df.head(5)
+dynamical_genes = scv.get_df(merged, 'rank_dynamical_genes/names')
+dynamical_genes.head(5)
 #M# write dynamical genes to excel
 try:
-    df.to_excel('dynamical_genes.xlsx')
+    dynamical_genes.to_excel('dynamical_genes.xlsx')
 except Exception as e:
     print("An error occurred:", e)
 
 for cluster in merged.obs['Clusters'].unique().tolist():
-    scv.pl.scatter(merged, df[cluster][:5], color='Clusters', ylabel=cluster, frameon=False) # , save=f'dynamical_for_{cluster}.png'
+    scv.pl.scatter(merged, dynamical_genes[cluster][:5], color='Clusters', ylabel=cluster, frameon=False) # , save=f'dynamical_for_{cluster}.png'
 
 scv.tl.rank_velocity_genes(merged, groupby='Clusters', min_corr=.3) #M# todo: whats the difference between this and rank_dynamical_genes?
-df = scv.get_df(merged, 'rank_velocity_genes/names')
-df.head()
-df.to_excel('velocity_genes.xlsx')
+velocity_genes = scv.get_df(merged, 'rank_velocity_genes/names')
+velocity_genes.head()
+velocity_genes.to_excel('velocity_genes.xlsx')
 for cluster in merged.obs['Clusters'].unique().tolist():
-    scv.pl.scatter(merged, df[cluster][:5], ylabel=cluster, frameon=False)  # M# why does this not work when i add : color='Clusters'?
-
-for cluster in merged.obs['Clusters'].unique().tolist():
-    scv.pl.scatter(merged, df[cluster][:5], ylabel=cluster, frameon=False, color='Clusters')  # M# why does this not work when i add : color='Clusters'?
+    scv.pl.scatter(merged, velocity_genes[cluster][:5], ylabel=cluster, frameon=False, color='Clusters')  # M# why does this not work when i add : color='Clusters'?
 #M# todo : rank_velocity_genes() and rank_dynamical_genes() does same thing? understand difference
 
 #M# subsetting from specific genes to see how this afects the velocity umap
@@ -149,8 +149,10 @@ scv.pp.moments(control_merged, n_pcs=8, n_neighbors=30)
 scv.tl.recover_dynamics(control_merged, n_jobs=8)  # long time
 scv.tl.velocity(control_merged, mode='dynamical')
 scv.tl.velocity_graph(control_merged)
-scv.pl.velocity_embedding_stream(control_merged, color='Clusters', basis="umap", dpi=300, save='control_obj.png') # , save='.png'
-#scv.write(filename='control_merged.h5ad', adata=control_merged)
+scv.pl.velocity_embedding_stream(control_merged, color='Clusters', basis="umap", dpi=300) # , save='.png'
+scv.tl.paga(control_merged, groups='Clusters')
+scv.pl.paga(control_merged, basis='umap', size=50, alpha=.1, min_edge_width=2, node_size_scale=1.5)
+#sc.write(filename='control_merged.h5ad', adata=control_merged)
 
 #M# Treatment analysis
 treat_merged.obs['Clusters']
@@ -159,16 +161,17 @@ scv.pp.moments(treat_merged, n_pcs=8, n_neighbors=30)
 scv.tl.recover_dynamics(treat_merged, n_jobs=8)  # long time
 scv.tl.velocity(treat_merged, mode='dynamical')
 scv.tl.velocity_graph(treat_merged)
-scv.pl.velocity_embedding_stream(treat_merged, color='Clusters', basis="umap", dpi=300, save='treatment_obj.png') # , save='.png'
-#scv.write(filename='treat_merged.h5ad', adata=treat_merged)
-
-
+scv.pl.velocity_embedding_stream(treat_merged, color='Clusters', basis="umap", dpi=300) # , save='treatment_obj.png'
 scv.tl.paga(treat_merged, groups='Clusters')
 scv.pl.paga(treat_merged, basis='umap', size=50, alpha=.1, min_edge_width=2, node_size_scale=1.5)
+#sc.write(filename='treat_merged.h5ad', adata=treat_merged)
+
+
+
 
 #M# trying functions from scv tutorial
 #M# testing for differential kinetics:
-merged.obs['clusters'] = merged.obs['Clusters']
+merged.obs['clusters'] = merged.obs['Clusters'] #M# difference is c/C
 scv.tl.differential_kinetic_test(merged)  # , groupby=None #
 differential_kin_df = scv.get_df(merged, ['fit_diff_kinetics', 'fit_pval_kinetics'], precision=2)
 differential_kin_df.head(10)
@@ -220,7 +223,6 @@ scv.tl.recover_dynamics(merged, var_names='all') #M# maybe edit var_names = [ , 
 
 
 
-trying = merged.var[merged.var['velocity_genes']==True]
 #M# understanding number of velocity genes
 print(merged.var['velocity_genes'].sum(), merged.n_vars) #M# 917 velocity contributing genes
 #M# phase plots of top likelyhood genes
@@ -233,9 +235,24 @@ scv.tl.velocity(modify_velo_params, mode='dynamical', min_r2=1e-5, min_likelihoo
 scv.tl.velocity_graph(modify_velo_params)
 scv.pl.velocity_embedding_stream(modify_velo_params, color='Clusters', basis="umap", title=f'sub_no_naive', dpi=300)# , save='sub_no_naive.png'
 print(modify_velo_params.var['velocity_genes'].sum(), modify_velo_params.n_vars) #M# 990 velocity contributing genes
-
 scv.tl.paga(modify_velo_params, groups='Clusters')
 scv.pl.paga(modify_velo_params, basis='umap', size=50, alpha=.1, min_edge_width=2, node_size_scale=1.5)#, save='paga_sub_no_naive.png'
+
+
+
+#M# attempt to make velocity signatures phase plots
+scv.tl.rank_velocity_genes(merged, groupby='Clusters', min_corr=.3) #M# todo: whats the difference between this and rank_dynamical_genes?
+df = scv.get_df(merged, 'rank_velocity_genes/names')
+df.head()
+df.to_excel('velocity_genes.xlsx')
+trying = merged.var[merged.var['velocity_genes']==True]
+velo_genes = trying.sort_values(by='fit_likelihood', ascending=False)
+
+checkout=merged.var["velocity_score"] #M# todo : understand info
+
+
+
+
 
 
 
@@ -264,7 +281,7 @@ if __name__== '__main__' :
     for cluster in df_by_treatment.columns:
         counter=1
         for gene_to_show in df_by_treatment.loc[:4, cluster]:
-            scv.pl.velocity(merged, var_names=gene_to_show, color='Treatment', dpi=300)  # , title=f'sub_{cluster}' # , save=f'dynamic_{cluster}_{counter}.png'
+            scv.pl.velocity(merged, var_names=gene_to_show, color='Treatment', legend_loc='best', dpi=300)  # , title=f'sub_{cluster}' # , save=f'dynamic_{cluster}_{counter}.png'
             counter=counter+1
        # genes_to_show= df_by_treatment.loc[:4, cluster]
        # scv.pl.velocity(merged, var_names=genes_to_show, color='Treatment', dpi=300) # , title=f'sub_{cluster}'

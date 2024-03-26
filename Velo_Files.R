@@ -32,9 +32,16 @@ Top50Markers =
   arrange(cluster,-avg_log2FC)
 write_csv(Top50Markers, "Rplots/50_DE genes.csv")
 
-S.obj_markers %>%
-  group_by(cluster) %>%
-  top_n(n = 10, wt = avg_log2FC) -> top10_T
-DoHeatmap(T_cells_0, features = top10_T$gene) + NoLegend() + scale_fill_gradientn(colors = c("blue", "white", "red"))
-ggsave(file = "Rplots/T cells markers - heatmap.png", dpi=300, width=12, height=20)
-saveRDS(T_cells_0, file="//asafmadilabfs/asafmadilab$/michael/Madi lab/scRNA seq Pipeline/m/sara_teva/ateno+saline/Objects/Teva_T_intermediate_object.rds")
+
+
+expression_matrix <- GetAssayData(object = S.obj, slot = "counts")
+gene_expression <- expression_matrix['Pdcd1', ]
+FeaturePlot(S.obj, features = c("Ptprc"), reduction="tsne")
+
+
+
+
+
+
+
+
