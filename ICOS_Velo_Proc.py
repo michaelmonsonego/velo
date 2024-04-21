@@ -73,7 +73,9 @@ scv.pl.velocity_embedding_stream(merged, color='Clusters', basis="umap", dpi=300
 merged = sc.read(filename='merged.h5ad')
 
 scv.tl.recover_latent_time(merged)
-scv.pl.scatter(merged, color='latent_time', color_map='gnuplot', size=80)
+scv.pl.scatter(merged, color='latent_time', color_map='gnuplot', dpi=300, save='latent_time.png')
+#M# keren needs: (height,width) : (8.9,9.7)
+
 
 #M#
 scv.pl.velocity_embedding(merged, color='Clusters', basis='umap', arrow_size=8, dpi=300)  # M# arrow size wont change
