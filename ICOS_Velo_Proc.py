@@ -9,7 +9,7 @@ import anndata
 import os
 # import hdf5plugin
 import warnings
-import signature_utils as su
+import signature_utils_velo as su
 
 warnings.filterwarnings('ignore')
 os.chdir(r'D:\Michael\velo')
@@ -278,15 +278,22 @@ for cluster in merged.obs['Clusters'].unique().tolist():
     scv.pl.scatter(merged, dynamical_genes[cluster][:5], color='Clusters', ylabel=cluster, frameon=False) # , save=f'dynamical_for_{cluster}.png'
 
 
-#M# velo signatures 
+#M# velo signatures
 
 merged = sc.read(filename='merged.h5ad')
 df = merged.layers["velocity"]
 mask = ~np.isnan(df)[0,:]
 clean = df[:,mask]
-up_sig = pd.read_table(r'D:/user/Downloads/IFNg_down.txt')
+#up_sig = pd.read_table(r'D:/user/Downloads/IFNg_down.txt')
+up_sig = pd.read_table(r'D:/user/Downloads/Ifng hallmark sig.txt')
+su.run_velo_signature_on_obj_val(merged, up_sig)
+
+#M# hakllmark infg respone geneset
+gene_names = up_sig['HALLMARK_INTERFERON_GAMMA_RESPONSE'].tolist()
+gene_names.remove('> Genes up-regulated in response to IFNG [GeneID=3458].')
+formatted_gene_names = [name.capitalize() for name in gene_names]
 #up_sig = up_sig['x'].str.lower().values #M# genes are with capital first letter
-su.run_signature_on_obj_val(merged, up_sig)
+su.run_velo_signature_on_obj_val(merged, up_sig=formatted_gene_names)
 
 
 
