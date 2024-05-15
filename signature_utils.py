@@ -119,7 +119,7 @@ def normW(W):
     return W / sum_rows
 
 
-def run_signature_on_obj_val(obj, up_sig, down_sig=None, conn_flag =  True, umap_flag = True):
+def run_velo_signature_on_obj_val(obj, up_sig, down_sig=None, conn_flag =  True, umap_flag = True):
     exp = pd.DataFrame(obj.layers["velocity"], columns=obj.var.index, index=obj.obs.index)
     exp = exp.T.dropna()
     scaler = StandardScaler()
