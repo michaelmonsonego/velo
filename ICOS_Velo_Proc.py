@@ -9,6 +9,7 @@ import anndata
 import os
 # import hdf5plugin
 import warnings
+import signature_utils as su
 
 warnings.filterwarnings('ignore')
 os.chdir(r'D:\Michael\velo')
@@ -254,12 +255,38 @@ checkout=merged.var["velocity_score"] #M# todo : understand info
 
 
 
+#M# velocity confidence
+scv.tl.velocity_confidence(merged)
+keys = 'velocity_length', 'velocity_confidence'
+scv.pl.scatter(merged, c=keys, cmap='coolwarm', perc=[5, 95])
+df = merged.obs.groupby('Clusters')[[keys]].mean().T
+df.style.background_gradient(cmap='coolwarm', axis=1)
 
 
+#M# getting velocity values per gene
+Ms = merged.layers["Ms"]
+velo_per_gene_df = merged.layers["velocity"] #M# or is it Ms?
 
 
+var_df = merged.var
+var_df = var_df[(var_df['fit_likelihood'] > .1) & var_df['velocity_genes'] == True]
+
+scv.tl.rank_dynamical_genes(merged, groupby='Clusters')
+dynamical_genes = scv.get_df(merged, 'rank_dynamical_genes/names')
+dynamical_genes.head(5)
+for cluster in merged.obs['Clusters'].unique().tolist():
+    scv.pl.scatter(merged, dynamical_genes[cluster][:5], color='Clusters', ylabel=cluster, frameon=False) # , save=f'dynamical_for_{cluster}.png'
 
 
+#M# velo signatures 
+
+merged = sc.read(filename='merged.h5ad')
+df = merged.layers["velocity"]
+mask = ~np.isnan(df)[0,:]
+clean = df[:,mask]
+up_sig = pd.read_table(r'D:/user/Downloads/IFNg_down.txt')
+#up_sig = up_sig['x'].str.lower().values #M# genes are with capital first letter
+su.run_signature_on_obj_val(merged, up_sig)
 
 
 

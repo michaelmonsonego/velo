@@ -13,3 +13,4 @@ Genesets/
 *.rdx
 *.rdb
 *.html
+.Rproj.user

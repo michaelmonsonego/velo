@@ -41,7 +41,3 @@ FeaturePlot(S.obj, features = c("Ptprc"), reduction="tsne")
 
 
 
-
-
-
-
