@@ -285,18 +285,17 @@ df = merged.layers["velocity"]
 mask = ~np.isnan(df)[0,:]
 clean = df[:,mask]
 #up_sig = pd.read_table(r'D:/user/Downloads/IFNg_down.txt')
-up_sig = pd.read_table(r'D:/user/Downloads/Ifng hallmark sig.txt')
-su.run_velo_signature_on_obj_val(merged, up_sig)
 
 #M# hakllmark infg respone geneset
+up_sig = pd.read_table(r'D:/user/Downloads/Ifng hallmark sig.txt')
 gene_names = up_sig['HALLMARK_INTERFERON_GAMMA_RESPONSE'].tolist()
 gene_names.remove('> Genes up-regulated in response to IFNG [GeneID=3458].')
 formatted_gene_names = [name.capitalize() for name in gene_names]
 #up_sig = up_sig['x'].str.lower().values #M# genes are with capital first letter
+su.run_exp_signature_on_obj_val(merged, up_sig=formatted_gene_names)
+sc.pl.umap(merged, color=["SigScore"],color_map="magma", save='_exp_sig_hallmark_infgr.png')
 su.run_velo_signature_on_obj_val(merged, up_sig=formatted_gene_names)
-
-
-
+sc.pl.umap(merged, color=["SigScore"],color_map="magma", save='_velo_sig_hallmark_infgr.png')
 
 
 

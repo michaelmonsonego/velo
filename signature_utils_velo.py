@@ -119,6 +119,26 @@ def normW(W):
     return W / sum_rows
 
 
+def run_exp_signature_on_obj_val(obj, up_sig, down_sig=None, conn_flag =  True, umap_flag = True):
+   # scaler = StandardScaler()
+   # exp = scaler.fit_transform(exp.T).T      #
+    exp = obj.to_df().T
+    sigs_scores = signature_values(exp, up_sig, down_sig) # wilcoxon score
+    if conn_flag:
+
+        graph = obj.obsp["connectivities"].toarray()
+    else:
+        graph = obj.obsp["distances"].toarray()
+    #sigs_scores = propagation(sigs_scores,graph)
+    obj.obs["SigScore"] = sigs_scores
+    if umap_flag:
+        sc.pl.umap(obj, color=["SigScore"],color_map="magma")
+    else:
+        sc.pl.tsne(obj, color=["SigScore"],color_map="magma")
+
+    return obj
+
+
 def run_velo_signature_on_obj_val(obj, up_sig, down_sig=None, conn_flag =  True, umap_flag = True):
     exp = pd.DataFrame(obj.layers["velocity"], columns=obj.var.index, index=obj.obs.index)
     exp = exp.T.dropna()
@@ -138,5 +158,3 @@ def run_velo_signature_on_obj_val(obj, up_sig, down_sig=None, conn_flag =  True,
         sc.pl.tsne(obj, color=["SigScore"],color_map="magma")
 
     return obj
-
-
