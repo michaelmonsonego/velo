@@ -50,6 +50,34 @@ ldata_c = scv.read(r'.loom', cache=True)
 ldata_d = scv.read(r'.loom', cache=True)
 ldata_e = scv.read(r'.loom', cache=True)
 
+ldata = anndata.concat([ldata_a, ldata_b, ldata_c, ldata_d, ldata_e])
+ldata.var_names_make_unique()
+merged = scv.utils.merge(counts_sub, ldata)
+
+scv.pp.filter_and_normalize(merged, flavor='seurat')
+scv.pp.moments(merged, n_pcs=8, n_neighbors=30)
+scv.tl.recover_dynamics(merged, n_jobs=8)  # long time
+scv.tl.velocity(merged, mode='dynamical')
+scv.tl.velocity_graph(merged)
+scv.pl.velocity_embedding_stream(merged, color='Clusters', basis="umap", dpi=300) #, save='velocity_embedding_stream.png'
+
+# sc.write(filename='merged.h5ad', adata=merged)
+merged = sc.read(filename='merged.h5ad')
+
+#M# velo signatures
+#M# 16.5 16:40 - which signature to run? ask shai
+
+#merged = sc.read(filename='merged.h5ad')
+#M# hakllmark infg respone geneset
+up_sig = pd.read_table(r'D:/user/Downloads/Ifng hallmark sig.txt')
+gene_names = up_sig['HALLMARK_INTERFERON_GAMMA_RESPONSE'].tolist()
+gene_names.remove('> Genes up-regulated in response to IFNG [GeneID=3458].')
+formatted_gene_names = [name.capitalize() for name in gene_names]
+#up_sig = up_sig['x'].str.lower().values #M# genes are with capital first letter
+su.run_exp_signature_on_obj_val(merged, up_sig=formatted_gene_names)
+sc.pl.umap(merged, color=["SigScore"],color_map="magma", save='_exp_sig_hallmark_infgr.png')
+su.run_velo_signature_on_obj_val(merged, up_sig=formatted_gene_names)
+sc.pl.umap(merged, color=["SigScore"],color_map="magma", save='_velo_sig_hallmark_infgr.png')
 
 
 
