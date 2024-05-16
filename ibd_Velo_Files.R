@@ -1,13 +1,13 @@
 library(Seurat)
 library(tidyverse)
 
-S.obj <- readRDS(r"(D:\Michael\velo\ICOS.Tregsubset_merged.RDS)")
-S.obj$Sample
+S.obj <- readRDS(r"(D:\Michael\ibd_velo\IBD.Tcells3.14dims.res55.Annotated.rds)")
+S.obj$Treatment
 
 ############### by https://github.com/basilkhuder/Seurat-to-RNA-Velocity ##################
-write.csv(Embeddings(S.obj, reduction = "umap"), file = r"(D:\Michael\velo\cell_embeddings_umap.csv)")
+write.csv(Embeddings(S.obj, reduction = "umap"), file = r"(D:\Michael\ibd_velo\cell_embeddings_umap.csv)")
 write.csv(Idents(S.obj), file = r"(D:\Michael\velo\clusters.csv)")
-write.csv(S.obj$Sample, file = r"(D:\Michael\velo\Treatment.csv)")
+write.csv(S.obj$orig.ident, file = r"(D:\Michael\velo\Treatment.csv)")
 
 #M# just checking consistency
 DimPlot(S.obj, reduction = "tsne", label= TRUE, pt.size=2, label.size = 8)
@@ -38,6 +38,5 @@ expression_matrix <- GetAssayData(object = S.obj, slot = "counts")
 gene_expression <- expression_matrix['Pdcd1', ]
 FeaturePlot(S.obj, features = c("Ptprc"), reduction="tsne")
 
-
-
+#M# make gene expression signature
 
