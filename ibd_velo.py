@@ -9,7 +9,7 @@ import anndata
 import os
 # import hdf5plugin
 import warnings
-import signature_utils as su  #todo : what ?
+import signature_utils_velo as su  #todo : what ?
 
 warnings.filterwarnings('ignore')
 os.chdir(r'D:\Michael\velo')
@@ -31,7 +31,7 @@ counts_e = sc.read_10x_mtx(r"<PATH>\filtered_feature_bc_matrix", var_names='gene
 
  #M# need this ? : counts.obs.index = ["Control_" + bc for bc in counts_C.obs.index.tolist()]
 counts_full = anndata.concat([counts_a, counts_b, counts_c, counts_d, counts_e])
-
+#M# filter out cells who were filtered out in preprocessing
 common_ind = list(set(counts_full.obs.index).intersection(Clusters.index.tolist(), UMAP.index.tolist()))
 counts_sub = counts_full[common_ind]
 UMAP = UMAP.loc[common_ind]
@@ -62,7 +62,7 @@ scv.tl.velocity_graph(merged)
 scv.pl.velocity_embedding_stream(merged, color='Clusters', basis="umap", dpi=300) #, save='velocity_embedding_stream.png'
 
 # sc.write(filename='merged.h5ad', adata=merged)
-merged = sc.read(filename='merged.h5ad')
+# merged = sc.read(filename='merged.h5ad')
 
 #M# velo signatures
 #M# 16.5 16:40 - which signature to run? ask shai
