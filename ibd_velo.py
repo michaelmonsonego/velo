@@ -12,7 +12,7 @@ import warnings
 import signature_utils_velo as su  #todo : what ?
 
 warnings.filterwarnings('ignore')
-os.chdir(r'D:\Michael\velo')
+os.chdir(r'D:\Michael\ibd_velo')
 
 
 # Read in the clusters
@@ -22,19 +22,26 @@ Clusters = pd.read_csv("clusters.csv", delimiter=',', index_col=0) # which clust
 UMAP = pd.read_csv("cell_embeddings_umap.csv", delimiter=',', index_col=0) # the umap value for each cell
 
 # Read filtered feature bc matrix output from cellranger count
-counts_a = sc.read_10x_mtx(r"<PATH>\filtered_feature_bc_matrix", var_names='gene_symbols', cache=True)
-counts_b = sc.read_10x_mtx(r"<PATH>\filtered_feature_bc_matrix", var_names='gene_symbols', cache=True)
-counts_c = sc.read_10x_mtx(r"<PATH>\filtered_feature_bc_matrix", var_names='gene_symbols', cache=True)
-counts_d = sc.read_10x_mtx(r"<PATH>\filtered_feature_bc_matrix", var_names='gene_symbols', cache=True)
-counts_e = sc.read_10x_mtx(r"<PATH>\filtered_feature_bc_matrix", var_names='gene_symbols', cache=True)
+counts_a = sc.read_10x_mtx(r"D:\Michael\IBD_Project\A_exp75\outs\filtered_feature_bc_matrix", var_names='gene_symbols', cache=False)
+counts_b = sc.read_10x_mtx(r"D:\Michael\IBD_Project\D_exp75\outs\filtered_feature_bc_matrix", var_names='gene_symbols', cache=False)
+counts_c = sc.read_10x_mtx(r"D:\Michael\IBD_Project\F_exp75\outs\filtered_feature_bc_matrix", var_names='gene_symbols', cache=False)
+counts_d = sc.read_10x_mtx(r"D:\Michael\IBD_Project\G_exp75\outs\filtered_feature_bc_matrix", var_names='gene_symbols', cache=False)
+counts_e = sc.read_10x_mtx(r"D:\Michael\IBD_Project\H_exp75\outs\filtered_feature_bc_matrix", var_names='gene_symbols', cache=False)
 
 
  #M# need this ? : counts.obs.index = ["Control_" + bc for bc in counts_C.obs.index.tolist()]
 counts_full = anndata.concat([counts_a, counts_b, counts_c, counts_d, counts_e])
+#M# unifying format
+Clusters.index = [name.split('_')[-2] for name in Clusters.index.tolist()]
+Clusters = Clusters[~Clusters.index.duplicated(keep='first')]
+UMAP.index = [name.split('_')[-2] for name in UMAP.index.tolist()]
+UMAP = UMAP[~UMAP.index.duplicated(keep='first')]
 #M# filter out cells who were filtered out in preprocessing
-common_ind = list(set(counts_full.obs.index).intersection(Clusters.index.tolist(), UMAP.index.tolist()))
-counts_sub = counts_full[common_ind]
-UMAP = UMAP.loc[common_ind]
+common_ind = list(set(counts_full.obs.index).intersection(Clusters.index, UMAP.index))
+counts_sub = counts_full[counts_full.obs_names.isin(common_ind), :]
+counts_sub=counts_sub[~counts_sub.obs.index.duplicated(), :]
+
+UMAP = UMAP.loc[common_ind] #M# doesnt work
 # Transform to Numpy (for formatting)
 UMAP = UMAP.to_numpy()
 
@@ -44,14 +51,34 @@ counts_sub.obs['Clusters'] = Clusters
 # Add UMAP to object
 counts_sub.obsm["X_umap"] = UMAP
 
-ldata_a = scv.read(r'.loom', cache=True)
-ldata_b = scv.read(r'.loom', cache=True)
-ldata_c = scv.read(r'.loom', cache=True)
-ldata_d = scv.read(r'.loom', cache=True)
-ldata_e = scv.read(r'.loom', cache=True)
+ldata_a = scv.read(r'D:\Michael\ibd_looms\A_exp75.loom', cache=False)
+ldata_b = scv.read(r'D:\Michael\ibd_looms\D_exp75.loom', cache=False)
+ldata_c = scv.read(r'D:\Michael\ibd_looms\F_exp75.loom', cache=False)
+ldata_d = scv.read(r'D:\Michael\ibd_looms\G_exp75.loom', cache=False)
+ldata_e = scv.read(r'D:\Michael\ibd_looms\H_exp75.loom', cache=False)
+
+#M# todo : why do i need to run this twice in order for both replacements to happen ?
+ldata_a.obs.index = [bc.replace("A_e-1p75:", "").replace("x", "-1") for bc in ldata_a.obs.index.tolist()]
+ldata_b.obs.index = [bc.replace("D_e-1p75:", "").replace("x", "-1") for bc in ldata_a.obs.index.tolist()]
+ldata_c.obs.index = [bc.replace("F_e-1p75:", "").replace("x", "-1") for bc in ldata_a.obs.index.tolist()]
+ldata_d.obs.index = [bc.replace("G_e-1p75:", "").replace("x", "-1") for bc in ldata_a.obs.index.tolist()]
+ldata_e.obs.index = [bc.replace("H_e-1p75:", "").replace("x", "-1") for bc in ldata_a.obs.index.tolist()]
+
+ldata_a = ldata_a[np.isin(ldata_a.obs.index, common_ind)].copy()
+ldata_a.var_names_make_unique()
+ldata_b = ldata_b[np.isin(ldata_b.obs.index, common_ind)].copy()
+ldata_b.var_names_make_unique()
+ldata_c = ldata_c[np.isin(ldata_c.obs.index, common_ind)].copy()
+ldata_c.var_names_make_unique()
+ldata_d = ldata_d[np.isin(ldata_d.obs.index, common_ind)].copy()
+ldata_d.var_names_make_unique()
+ldata_e = ldata_e[np.isin(ldata_e.obs.index, common_ind)].copy()
+ldata_e.var_names_make_unique()
+
 
 ldata = anndata.concat([ldata_a, ldata_b, ldata_c, ldata_d, ldata_e])
 ldata.var_names_make_unique()
+
 merged = scv.utils.merge(counts_sub, ldata)
 
 scv.pp.filter_and_normalize(merged, flavor='seurat')
