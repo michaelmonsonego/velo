@@ -12,7 +12,7 @@ import warnings
 import signature_utils_velo as su
 
 warnings.filterwarnings('ignore')
-os.chdir(r'D:\Michael\velo')
+os.chdir(r'D:\Michael\icos_velo')
 
 # Read in the clusters
 Clusters = pd.read_csv("clusters.csv", delimiter=',', index_col=0) # which cluster every cell belongs to
@@ -21,8 +21,8 @@ Treatment = pd.read_csv("Treatment.csv", delimiter=',', index_col=0) # defined c
 UMAP = pd.read_csv("cell_embeddings_umap.csv", delimiter=',', index_col=0) # the umap value for each cell
 
 # Read filtered feature bc matrix output from cellranger count
-counts_C = sc.read_10x_mtx(r"ICOS_shai\antiICOS_C1\filtered_feature_bc_matrix", var_names='gene_symbols', cache=True)
-counts_T = sc.read_10x_mtx(r"ICOS_shai\antiICOS_T1\filtered_feature_bc_matrix", var_names='gene_symbols', cache=True)
+counts_C = sc.read_10x_mtx(r"ICOS_shai\antiICOS_C1\filtered_feature_bc_matrix", var_names='gene_symbols', cache=False)
+counts_T = sc.read_10x_mtx(r"ICOS_shai\antiICOS_T1\filtered_feature_bc_matrix", var_names='gene_symbols', cache=False)
 
 counts_C.obs.index = ["Control_" + bc for bc in counts_C.obs.index.tolist()]
 counts_T.obs.index = ["Treatment_" + bc for bc in counts_T.obs.index.tolist()]
@@ -46,15 +46,14 @@ counts_sub.obs['Treatment'] = Treatment
 counts_sub.obsm["X_umap"] = UMAP
 
 # load loom files for spliced/unspliced matrices for each sample:
-ldataC = scv.read(r'ICOS_shai\antiICOS_C1\C1.loom', cache=True)
-ldataT = scv.read(r'ICOS_shai\antiICOS_T1\T1.loom', cache=True)
+ldataC = scv.read(r'ICOS_shai\antiICOS_C1\C1.loom', cache=False)
+ldataT = scv.read(r'ICOS_shai\antiICOS_T1\T1.loom', cache=False)
 
 ldataC.obs.index = [bc.replace("C1:", "Control_").replace("x", "-1") for bc in ldataC.obs.index.tolist()]
 ldataT.obs.index = [bc.replace("T1:", "Treatment_").replace("x", "-1") for bc in ldataT.obs.index.tolist()]
 
 ldataC = ldataC[np.isin(ldataC.obs.index, common_ind)]
 ldataT = ldataT[np.isin(ldataT.obs.index, common_ind)]
-
 ldataC.var_names_make_unique()
 ldataT.var_names_make_unique()
 
